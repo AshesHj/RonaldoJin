@@ -52,19 +52,19 @@ Redis配置信息在redis.conf中包含守护进程模式，端口、日志存�
 
 修改从配置文件以下两项：
 
-# 绑定局域网ip
+### 绑定局域网ip
 
 bind 127.0.0.1 10.6.60.150
 
-# 设置密码
+### 设置密码
 
 requirepass camelot123
 
-# 设置master的ip和端口
+### 设置master的ip和端口
 
 slaveof 10.6.60.149 6379
 
-# 设置master的密码
+### 设置master的密码
 
 masterauth camelot123
 
@@ -80,7 +80,7 @@ $CLIEXEC -a "camelot123" -p $REDISPORT shutdown
 
 测试：
 
-# 在主上插入测试数据
+### 在主上插入测试数据
 
 [root@bogon bin]# redis-cli -h 10.6.60.149
 
@@ -92,7 +92,7 @@ OK
 
 OK
 
-# 在从上获取在主上插入的数据
+### 在从上获取在主上插入的数据
 
 [root@bogon bin]# redis-cli -h 10.6.60.150
 
