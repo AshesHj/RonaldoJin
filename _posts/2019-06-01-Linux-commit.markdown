@@ -9,39 +9,27 @@ tags: [java, Linux] # add tag
 
 ### 参考：
 http://www.yunweipai.com/archives/20444.html
-
 http://blog.csdn.net/woniu211111/article/details/54646755
-
 http://redis.majunwei.com/topics/sentinel.html
 
 ### 服务器：
 10.6.60.149    Redis Master / Sentinel
-
 10.6.60.150    Redis Slave / Sentinel
 
 ### 安装：
 1. Standalone
-
 * 创建redis安装目录 
-
 `mkdir /usr/local/redis`
-
 * 下载Redis安装包
-
 `wget http://download.redis.io/releases/redis-3.2.8.tar.gz`
-
 * 安装编译安装redis所需要的软件
-
 `yum install -y wget make gcc tcl`
-
 编译安装redis
-
-(```)
+```
     tar xvf redis-3.2.8.tar.gz
     cd redis-3.2.8
     make PREFIX=/usr/local/redisMALLOC=libc install
-(```)
-
+```
 安装完成后会在 /usr/local/redis看到一个bin目录，有以下文件
 
 ![I and My friends]({{site.baseurl}}/assets/img/redis/bin.jpg)
@@ -51,77 +39,48 @@ http://redis.majunwei.com/topics/sentinel.html
 ![I and My friends]({{site.baseurl}}/assets/img/redis/redis.jpg)
 
 Redis配置信息在redis.conf中包含守护进程模式，端口、日志存储位置、数据存储位置等，
-
 根据服务器规划自行设置。
-
 2. redis主从配置
 修改主配置文件以下两项：
 * 绑定局域网ip
-
 bind 127.0.0.1 10.6.60.149
-
 * 设置密码
-
 requirepass camelot123
-
 * master的密码 按说主是不用配置这个的，但是因为主从可能互相切换，所以要配置
-
 masterauth camelot123
-
 修改从配置文件以下两项：
-
 ### 绑定局域网ip
-
 bind 127.0.0.1 10.6.60.150
-
 ### 设置密码
-
 requirepass camelot123
-
 ### 设置master的ip和端口
-
 slaveof 10.6.60.149 6379
-
 ### 设置master的密码
-
 masterauth camelot123
-
 由于我们设置了密码，所以需要修改service文件，不然重启有问题。因为关闭需要密码：
-
 vim /etc/init.d/redis_6379
-
 找到这一行，添加-a "camelot123"
-
 $CLIEXEC -a "camelot123" -p $REDISPORT shutdown
-
 重启主从安装完成
 
 测试：
 
 ### 在主上插入测试数据
-(```)
+```
     [root@bogon bin]# redis-cli -h 10.6.60.149
-
     10.6.60.149:6379> auth camelot123
-
     OK
-
     10.6.60.149:6379> set name "123"
-
     OK
-(```)
+```
 ### 在从上获取在主上插入的数据
-(```)
+```
     [root@bogon bin]# redis-cli -h 10.6.60.150
-
     10.6.60.150:6379> auth camelot123
-
     OK
-
     10.6.60.150:6379> get name  
-
     "123"
-(```)
+```
 
 3. Sentinel（哨兵）
 
@@ -136,17 +95,16 @@ Sentinel的职责：
 安装（两台机器上都要安装）
 切换到redis的解压目录，拷贝sentinel.conf到/etc/redis
 
-(```)
+```
     cd redis-3.2.8
-
     cp sentinel.conf /usr/local/redis/
-(```)
+```
 
 修改配置如下：
 
-(```)
+```
     vim /usr/local/redis/sentinel.conf
-
+    
     daemonize yes
     port 26379
     bind 127.0.0.1 10.6.60.149
@@ -156,7 +114,7 @@ Sentinel的职责：
     sentinel failover-timeout redis-master 180000
     sentinel auth-pass redis-master camelot123
     logfile /var/log/redis-sentinel.log
-(```)
+```
 
 配置项说明：
 
