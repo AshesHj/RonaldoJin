@@ -9,28 +9,38 @@ tags: [java, Linux] # add tag
 
 ### 参考：
 http://www.yunweipai.com/archives/20444.html
+
 http://blog.csdn.net/woniu211111/article/details/54646755
+
 http://redis.majunwei.com/topics/sentinel.html
 
 ### 服务器：
 10.6.60.149    Redis Master / Sentinel
+
 10.6.60.150    Redis Slave / Sentinel
 
 ### 安装：
 1. Standalone
+
 * 创建redis安装目录 
+
 `mkdir /usr/local/redis`
 
 * 下载Redis安装包
+
 `wget http://download.redis.io/releases/redis-3.2.8.tar.gz`
 
 * 安装编译安装redis所需要的软件
+
 `yum install -y wget make gcc tcl`
 
 编译安装redis
-`tar xvf redis-3.2.8.tar.gz`
-`cd redis-3.2.8`
-`make PREFIX=/usr/local/redisMALLOC=libc install`
+
+(```)
+    tar xvf redis-3.2.8.tar.gz
+    cd redis-3.2.8
+    make PREFIX=/usr/local/redisMALLOC=libc install
+(```)
 
 安装完成后会在 /usr/local/redis看到一个bin目录，有以下文件
 
@@ -90,27 +100,27 @@ $CLIEXEC -a "camelot123" -p $REDISPORT shutdown
 
 ### 在主上插入测试数据
 (```)
-[root@bogon bin]# redis-cli -h 10.6.60.149
+    [root@bogon bin]# redis-cli -h 10.6.60.149
 
-10.6.60.149:6379> auth camelot123
+    10.6.60.149:6379> auth camelot123
 
-OK
+    OK
 
-10.6.60.149:6379> set name "123"
+    10.6.60.149:6379> set name "123"
 
-OK
+    OK
 (```)
 ### 在从上获取在主上插入的数据
 (```)
-[root@bogon bin]# redis-cli -h 10.6.60.150
+    [root@bogon bin]# redis-cli -h 10.6.60.150
 
-10.6.60.150:6379> auth camelot123
+    10.6.60.150:6379> auth camelot123
 
-OK
+    OK
 
-10.6.60.150:6379> get name  
+    10.6.60.150:6379> get name  
 
-"123"
+    "123"
 (```)
 
 3. Sentinel（哨兵）
@@ -127,25 +137,25 @@ Sentinel的职责：
 切换到redis的解压目录，拷贝sentinel.conf到/etc/redis
 
 (```)
-cd redis-3.2.8
+    cd redis-3.2.8
 
-cp sentinel.conf /usr/local/redis/
+    cp sentinel.conf /usr/local/redis/
 (```)
 
 修改配置如下：
 
 (```)
-vim /usr/local/redis/sentinel.conf
+    vim /usr/local/redis/sentinel.conf
 
-daemonize yes
-port 26379
-bind 127.0.0.1 10.6.60.149
-sentinel monitor redis-master 10.6.60.149 6379 2
-sentinel down-after-milliseconds redis-master 10000
-sentinel parallel-syncs redis-master 2
-sentinel failover-timeout redis-master 180000
-sentinel auth-pass redis-master camelot123
-logfile /var/log/redis-sentinel.log
+    daemonize yes
+    port 26379
+    bind 127.0.0.1 10.6.60.149
+    sentinel monitor redis-master 10.6.60.149 6379 2
+    sentinel down-after-milliseconds redis-master 10000
+    sentinel parallel-syncs redis-master 2
+    sentinel failover-timeout redis-master 180000
+    sentinel auth-pass redis-master camelot123
+    logfile /var/log/redis-sentinel.log
 (```)
 
 配置项说明：
