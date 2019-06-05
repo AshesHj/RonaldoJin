@@ -7,16 +7,16 @@ img: # Add image post (optional)
 tags: [java, Linux] # add tag
 ---
 
-###参考：
+### 参考：
 http://www.yunweipai.com/archives/20444.html
 http://blog.csdn.net/woniu211111/article/details/54646755
 http://redis.majunwei.com/topics/sentinel.html
 
-###服务器：
+### 服务器：
 10.6.60.149    Redis Master / Sentinel
 10.6.60.150    Redis Slave / Sentinel
 
-###安装：
+### 安装：
 1. Standalone
 * 创建redis安装目录 
 `mkdir /usr/local/redis`
@@ -33,8 +33,11 @@ http://redis.majunwei.com/topics/sentinel.html
 `make PREFIX=/usr/local/redisMALLOC=libc install`
 
 安装完成后会在 /usr/local/redis看到一个bin目录，有以下文件
+
 ![I and My friends]({{site.baseurl}}/assets/img/redis/bin.jpg)
+
 启动redis服务 redis-server /usr/local/src/redis-3.2.8/redis.conf出现以下证明安装成功
+
 ![I and My friends]({{site.baseurl}}/assets/img/redis/redis.jpg)
 
 Redis配置信息在redis.conf中包含守护进程模式，端口、日志存储位置、数据存储位置等，
@@ -54,27 +57,27 @@ Redis配置信息在redis.conf中包含守护进程模式，端口、日志存�
 
 ### 绑定局域网ip
 
-bind 127.0.0.1 10.6.60.150
+`bind 127.0.0.1 10.6.60.150`
 
 ### 设置密码
 
-requirepass camelot123
+`requirepass camelot123`
 
 ### 设置master的ip和端口
 
-slaveof 10.6.60.149 6379
+`slaveof 10.6.60.149 6379`
 
 ### 设置master的密码
 
-masterauth camelot123
+`masterauth camelot123`
 
 由于我们设置了密码，所以需要修改service文件，不然重启有问题。因为关闭需要密码：
 
-vim /etc/init.d/redis_6379
+`vim /etc/init.d/redis_6379`
 
 找到这一行，添加-a "camelot123"
 
-$CLIEXEC -a "camelot123" -p $REDISPORT shutdown
+`$CLIEXEC -a "camelot123" -p $REDISPORT shutdown`
 
 重启主从安装完成
 
@@ -82,7 +85,7 @@ $CLIEXEC -a "camelot123" -p $REDISPORT shutdown
 
 ### 在主上插入测试数据
 
-[root@bogon bin]# redis-cli -h 10.6.60.149
+`[root@bogon bin]# redis-cli -h 10.6.60.149
 
 10.6.60.149:6379> auth camelot123
 
@@ -90,21 +93,21 @@ OK
 
 10.6.60.149:6379> set name "123"
 
-OK
+OK`
 
 ### 在从上获取在主上插入的数据
 
-[root@bogon bin]# redis-cli -h 10.6.60.150
+`[root@bogon bin]# redis-cli -h 10.6.60.150`
 
-10.6.60.150:6379> auth camelot123
+`10.6.60.150:6379> auth camelot123`
 
-OK
+`OK`
 
-10.6.60.150:6379> get name  
+`10.6.60.150:6379> get name  `
 
-"123"
+`"123"`
 
-    3. Sentinel（哨兵）
+3. Sentinel（哨兵）
 
 Sentinel的职责：
 
@@ -118,9 +121,9 @@ Sentinel的职责：
 切换到redis的解压目录，拷贝sentinel.conf到/etc/redis
 
 
-cd redis-3.2.8
+`cd redis-3.2.8`
 
-cp sentinel.conf /usr/local/redis/
+`cp sentinel.conf /usr/local/redis/`
 
 修改配置如下：
 
@@ -155,23 +158,23 @@ redis-master：是主数据库的别名，考虑到故障恢复后主数据库�
 
 2：该参数用来表示执行故障恢复操作前至少需要几个哨兵节点同意，一般设置为N/2+1(N为哨兵总数)。
 
-sentinel down-after-milliseconds redis-master 10000
+`sentinel down-after-milliseconds redis-master 10000`
 
 如果master在多少秒内无反应哨兵会开始进行master-slave间的切换，使用“选举”机制，默认30s
 
-sentinel failover-timeout redis-master 180000
+`sentinel failover-timeout redis-master 180000`
 
 如果在多少毫秒内没有把宕掉的那台Master恢复，那Sentinel认为这是一次真正的宕机。在下一次选取时排除该宕掉的Master作为可用的节点，然后等待一定的设定值的毫秒数后再来探测该节点是否恢复，如果恢复就把它作为一台Slave加入Sentinel监测节点群，并在下一次切换时为他分配一个”选取号”。
 
-sentinel parallel-syncs redis-master 2
+`sentinel parallel-syncs redis-master 2`
 
 表示一次性允许多少slave指向新的new master. 这里默认为1，如果该数值过大会导致新的master服务器IO剧增，保持默认1即可。
 
-sentinel auth-pass redis-master camelot123
+`sentinel auth-pass redis-master camelot123`
 
 当Master设置了密码时，Sentinel连接Master和Slave时需要通过设置参数auth-pass配置相应密码。
 
-logfile /var/log/redis/redis-sentinel.log
+`logfile /var/log/redis/redis-sentinel.log`
 
 日志位置
 
@@ -181,9 +184,9 @@ logfile /var/log/redis/redis-sentinel.log
 
 测试Failover，我们让10.6.60.149主机上的redis-master主动休眠60秒来观察failover过程：
 
-redis-cli -p 6379 -h 10.6.60.149 -a camelot123 DEBUG sleep 60
+`redis-cli -p 6379 -h 10.6.60.149 -a camelot123 DEBUG sleep 60`
 
 查看sentinel日志
 
-tail -fn200 /var/log/redis-sentinel.log
+`tail -fn200 /var/log/redis-sentinel.log`
 
